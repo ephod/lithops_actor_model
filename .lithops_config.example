@@ -1,0 +1,33 @@
+lithops:
+  mode: serverless
+  # First iteration
+  # storage: aws_s3
+  # Second iteration
+  storage: redis
+  storage_bucket: <STORAGE_BUCKET>
+  data_cleaner: true
+
+serverless:
+  backend: aws_lambda
+  runtime: python3.8
+
+redis:
+  host: <REDIS_HOST>
+  port: <REDIS_PORT>
+  # username: default
+  # db: 0
+  password: <REDIS_PASSWORD>
+  ssl: True
+
+aws:
+  access_key_id: <AWS_ACCESS_KEY_ID>
+  secret_access_key: <AWS_SECRET_ACCESS_KEY>
+
+aws_lambda:
+  execution_role: "arn:aws:iam::..."
+  region_name: eu-central-1
+
+aws_s3:
+  storage_bucket: <STORAGE_BUCKET>
+  region_name: eu-central-1
+  endpoint: https://<STORAGE_BUCKET>.s3.<REGION_NAME>.amazonaws.com/

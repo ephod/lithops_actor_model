@@ -1,0 +1,10 @@
+# Black section
+# Read more here: https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file
+[tool.black]
+line-length=80
+
+# Isort section
+# Read more here: https://pycqa.github.io/isort/docs/configuration/config_files.html
+[tool.isort]
+profile="black"
+line_length=80

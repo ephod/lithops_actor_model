@@ -1,0 +1,4 @@
+# Lithops lets you transparently run your Python applications in the Cloud
+# VCS: https://github.com/lithops-cloud/lithops
+# License: Apache Software License
+lithops[aws]==2.6.0

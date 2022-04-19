@@ -1,0 +1,10 @@
+-r requirements.txt
+
+# The uncompromising code formatter.
+# VCS: https://github.com/psf/black
+# License: MIT License (MIT)
+black==22.3.0
+# A Python utility / library to sort Python imports.
+# VCS: A Python utility / library to sort Python imports.
+# License: MIT License (MIT)
+isort==5.10.1
