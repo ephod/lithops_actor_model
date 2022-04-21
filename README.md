@@ -125,6 +125,8 @@ lithops logs poll
 
 ### MNIST
 
+[![asciicast](https://asciinema.org/a/489162.svg)](https://asciinema.org/a/489162)
+
 The datasets belong to:
 
 * Yann LeCun, Courant Institute, NYU
