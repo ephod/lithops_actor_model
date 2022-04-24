@@ -61,7 +61,8 @@ def main():
     parser.add_argument(
         "--numpy_file",
         type=lambda p: Path(p).absolute(),
-        default=Path(__file__).absolute().parent.parent / "weights_compressed.npz",
+        default=Path(__file__).absolute().parent.parent
+        / "weights_compressed.npz",
         help="Path to the Numpy file",
     )
 
