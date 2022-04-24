@@ -111,9 +111,10 @@ rm -rf .venv/
 ## Usage
 
 1. Counter: `python actor_model/counter.py`
-2. Ping pong: `python actor_model/mnist.py`
-3. Bank account: `python actor_model/mnist.py`
-4. MNIST: `python actor_model/mnist.py`
+2. Ping pong: `python actor_model/ping_pong.py`
+3. Bank account: `python actor_model/bank_account.py`
+4. Bank account v2: `python actor_model/bank_account_v2.py`
+5. MNIST: `python actor_model/mnist.py`
 
 View logs after each run.
 
