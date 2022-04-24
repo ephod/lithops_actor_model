@@ -1,0 +1,99 @@
+version: "3.2"
+
+services:
+  redis:
+    image: redis:6.2.6-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    environment:
+      REDIS_REPLICATION_MODE: master
+
+  redisinsight:
+    image: redislabs/redisinsight:1.11.1
+    ports:
+      - "127.0.0.1:8001:8001"
+
+# https://github.com/oliver006/redis_exporter
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.37.0-alpine
+    command: -redis.addr ${REDIS_SCHEMA}://${REDIS_HOST}:${REDIS_PORT} -redis.password ${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:9121:9121"
+    environment:
+      - REDIS_EXPORTER_INCL_SYSTEM_METRICS=true
+      - REDIS_EXPORTER_EXPORT_CLIENT_LIST=true
+      - REDIS_EXPORTER_REDIS_ONLY_METRICS=true
+
+  rabbitmq:
+    image: rabbitmq:3.9.15-alpine
+    hostname: my-rabbit
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+
+  prometheus:
+    image: prom/prometheus:v2.35.0
+    #    container_name: prometheus
+    volumes:
+      - ./docker/prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention=200h'
+      - '--web.enable-lifecycle'
+    # restart: unless-stopped
+    expose:
+      - 9090
+    labels:
+      org.label-schema.group: "monitoring"
+
+  pushgateway:
+    image: prom/pushgateway:v1.4.2
+    #    container_name: pushgateway
+    #    restart: unless-stopped
+    expose:
+      - 9091
+    ports:
+      - "127.0.0.1:9091:9091"
+    labels:
+      org.label-schema.group: "monitoring"
+
+  alertmanager:
+    image: prom/alertmanager:v0.24.0
+    #    container_name: alertmanager
+    volumes:
+      - ./docker/alertmanager/:/etc/alertmanager/
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    #    restart: unless-stopped
+    expose:
+      - 9093
+    labels:
+      org.label-schema.group: "monitoring"
+
+  grafana:
+    image: grafana/grafana:8.5.0
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/datasources:/etc/grafana/datasources
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    #    restart: unless-stopped
+    expose:
+      - 3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    labels:
+      org.label-schema.group: "monitoring"
+
+volumes:
+  prometheus_data: { }
+  grafana_data: { }

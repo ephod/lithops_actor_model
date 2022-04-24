@@ -5,6 +5,8 @@ venv/
 .env
 
 .lithops_config
+.lithops_config.lambda
+.lithops_config.local
 
 # Local .terraform directories
 **/.terraform/*
@@ -44,3 +46,5 @@ terraform.rc
 *.tfplan
 
 **/__pycache__/
+lithops_plots/*
+!lithops_plots/.gitkeep
