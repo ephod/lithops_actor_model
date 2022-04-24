@@ -216,30 +216,39 @@ This Redis instance has 🔒 encryption at rest and in transit: https://docs.dig
 
 1. Install Terraform CLI: https://learn.hashicorp.com/tutorials/terraform/install-cli
 2. Install Terraform providers.
+
     ```shell
     # Install providers
     terraform init
     ```
+
 3. Create a variable definition file for DigitalOcean's personal access token.
+
     ```shell
     # File with DigitalOcean personal access token ignored by GIT due to .gitignore
     cat << EOF >> digital-ocean.tfvars
     digital_ocean_token = ""
     EOF
     ```
+
 4. Use the variable definition file to spin up the Redis instance.
+
     ```shell
     # Use variable definitions and create an output file with the changes needed for Terraform apply
     terraform plan --var-file=digital-ocean.tfvars --input=false --out lithops.tfplan
     # DigitalOcean will now spin a managed Redis instance
     terraform apply "lithops.tfplan"
     ```
+
 5. Retrieve Redis configuration.
+
     ```shell
     # After several minutes retrieve host, port, and password
     terraform show --json
     ```
+
 6. Destroy the Redis instance to keep costs low.
+
     ```shell
     # Destroy managed Redis instance
     terraform destroy --var-file=digital-ocean.tfvars
