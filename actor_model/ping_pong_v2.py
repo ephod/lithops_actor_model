@@ -1,16 +1,8 @@
-# import multiprocessing as mp
 import logging
-import math
 import time
-from queue import Empty
-from threading import Thread
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
+from typing import Callable, Optional
 
-import lithops.multiprocessing as mp
-from lithops import FunctionExecutor
-from lithops.future import ResponseFuture
-
-T = TypeVar("T")
+from director import Director
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +13,7 @@ class Pinger(object):
     judge: Optional[str]
     ponger: Optional[str]
 
-    def set_up(self, pings: int, judge: str, ponger: str) -> None:
+    def set_up(self, pings, judge, ponger):
         self.pings_left = pings
         self.judge = judge
         self.ponger = ponger
@@ -30,7 +22,7 @@ class Pinger(object):
         self.director(self.judge, ("ping_ready", (), {}))
         print("Ping Ready")
 
-    def pong(self) -> None:
+    def pong(self):
         if self.pings_left > 0:
             # self.ponger.ping()
             self.director(self.ponger, ("ping", (), {}))
@@ -59,7 +51,6 @@ class Ponger(object):
 
 
 class Judge(object):
-    # https://stackoverflow.com/questions/34230618/python-3-5-type-hinting-dynamically-generated-instance-attributes
     director: Optional[Callable[[str, object], None]]
     pings: Optional[int]
     pinger: Optional[str]
@@ -84,11 +75,11 @@ class Judge(object):
         self.pong_ok = False
         print("Judge Ready 👨‍")
 
-    def ping_ready(self) -> None:
+    def ping_ready(self):
         self.ping_ok = True
         self.run()
 
-    def pong_ready(self) -> None:
+    def pong_ready(self):
         self.pong_ok = True
         self.run()
 
@@ -107,72 +98,7 @@ class Judge(object):
         self.director("director", ("finish", (), {}))
 
 
-def actor_process(
-    actor_type: T, queue: mp.Queue, director_queue: mp.Queue
-) -> None:
-    def send_to_director(name: str, msg: object) -> None:
-        director_queue.put([name, *msg])
-
-    instance = actor_type()
-    instance.director = send_to_director
-    while True:
-        message = queue.get()
-        # print(message)
-        if message == "pls stop":
-            break
-        method_name, args, kwargs = message
-        getattr(instance, method_name)(*args, **kwargs)
-
-
-class Director(object):
-    running: Optional[bool]
-    thread: Optional[Thread]
-
-    def __init__(self):
-        self.actors: Dict[str, mp.Queue] = {}
-        self.queue = mp.Queue()
-        self.counter = 0
-        self.waiting = True
-
-    def new_actor(self, actor_type: T, name: str) -> FunctionExecutor:
-        actor_queue = mp.Queue()
-        self.actors[name] = actor_queue
-        fexec = FunctionExecutor()
-        fexec.call_async(actor_process, (actor_type, actor_queue, self.queue))
-        return fexec
-
-    def run(self) -> None:
-        def p() -> None:
-            while self.running:
-                try:
-                    m = self.queue.get(timeout=1)
-                    dest: str = m[0]
-                    msg: object = m[1:]
-                    if dest == "director":
-                        self.waiting = False
-                    else:
-                        self.actors[dest].put(msg)
-                    self.counter += 1
-                    print(f"Queue message {self.counter}. 📮 {dest}")
-                    # print(f"Queue message {self.counter}. 📮 {dest}. ✉ {msg}")
-                except Empty:
-                    pass
-
-        self.running = True
-        self.thread = Thread(target=p)
-        self.thread.start()
-
-    def stop(self) -> None:
-        self.running = False
-        self.thread.join()
-
-    def msg_to(self, name: str, msg: object) -> None:
-        self.actors[name].put(msg)
-
-
-def main() -> None:
-    AWS_LAMBDA_TIMEOUT_SECONDS = 30
-    start = time.monotonic()
+def main():
     director = Director()
     director.run()
     judge_ps = director.new_actor(Judge, "judge")
@@ -181,25 +107,19 @@ def main() -> None:
 
     director.msg_to("judge", ("set_up", (100, "ping", "pong"), {}))
 
-    while director.waiting:
-        current_time = time.monotonic()
-        if math.ceil(current_time - start) > AWS_LAMBDA_TIMEOUT_SECONDS:
-            break
-
+    time.sleep(5)
     director.msg_to("judge", "pls stop")
     director.msg_to("ping", "pls stop")
     director.msg_to("pong", "pls stop")
 
-    judge_ps.get_result()
-    judge_ps.plot(dst="./lithops_plots/judge")
-    ping_ps.get_result()
-    ping_ps.plot(dst="./lithops_plots/ping")
-    pong_ps.get_result()
-    pong_ps.plot(dst="./lithops_plots/pong")
+    # judge_ps.join()
+    # ping_ps.join()
+    # pong_ps.join()
 
-    judge_ps.clean()
-    ping_ps.clean()
-    pong_ps.clean()
+    judge_ps.get_result()
+    ping_ps.get_result()
+    pong_ps.get_result()
+
     director.stop()
 
 
